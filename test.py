@@ -4,7 +4,7 @@ import pytest
 import torch
 import torch.nn as nn
 
-from modules import (
+from efficient_cross_entropy import (
     FusedProjectionPlusCrossEntropyLoss,
     PyTorchProjectionPlusCrossEntropyLoss,
 )
