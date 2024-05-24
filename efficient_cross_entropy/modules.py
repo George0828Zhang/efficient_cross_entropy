@@ -164,30 +164,19 @@ class FusedCrossEntropyLossFunction(torch.autograd.Function):
         loss = loss.sum()
 
         # Save data for backward
-        ctx.in_feat_requires_grad = in_feat.requires_grad
-        ctx.proj_weight_requires_grad = proj_weight.requires_grad
-
-        if proj_weight.requires_grad and in_feat.requires_grad:
-            ctx.save_for_backward(grad_in_feat, grad_proj_weight)
-        elif proj_weight.requires_grad and not in_feat.requires_grad:
-            ctx.save_for_backward(grad_proj_weight)
-        elif not proj_weight.requires_grad and in_feat.requires_grad:
-            ctx.save_for_backward(grad_in_feat)
+        ctx.save_for_backward(grad_in_feat, grad_proj_weight)
 
         return loss
 
     @staticmethod
     def backward(ctx, grad_output):
-        if ctx.in_feat_requires_grad and ctx.proj_weight_requires_grad:
-            grad_in_feat, grad_proj_weight = ctx.saved_tensors
-        elif not ctx.in_feat_requires_grad and ctx.proj_weight_requires_grad:
-            grad_proj_weight, = ctx.saved_tensors
-        elif ctx.in_feat_requires_grad and not ctx.proj_weight_requires_grad:
-            grad_in_feat, = ctx.saved_tensors
+        grad_in_feat, grad_proj_weight = ctx.saved_tensors
 
         assert grad_output.shape == tuple(), grad_output.shape
-        grad_in_feat *= grad_output
-        grad_proj_weight *= grad_output
+        if grad_in_feat is not None:
+            grad_in_feat *= grad_output
+        if grad_proj_weight is not None:
+            grad_proj_weight *= grad_output
 
         return grad_in_feat, grad_proj_weight, None, None, None, None
 
